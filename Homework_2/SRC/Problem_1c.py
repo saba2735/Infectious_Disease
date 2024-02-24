@@ -2,11 +2,11 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-def forward_euler_solver(beta, gamma, s_0, i_0, dt, max_t):
+def forward_euler_solver(beta, gamma, s0, i0, dt, max_t):
     t = 0
-    s = s_0
-    i = i_0
-    R_0 = beta / gamma
+    s = s0
+    i = i0
+    R0 = beta / gamma
     
     susceptibles = [s]
     infected = [i]
@@ -14,10 +14,10 @@ def forward_euler_solver(beta, gamma, s_0, i_0, dt, max_t):
     analytical = [i]
     
     while t < max_t:
-        i_t = (beta - gamma) * i * (1 - (i / (1 - (1 / R_0))))
+        i_t = (beta - gamma) * i * (1 - (i / (1 - (1 / R0))))
         
         exponential_term = np.exp(-(beta - gamma) * t)
-        analytical_soln = ((1 - (1 / R_0)) / (1 + ((1 - (1 / R_0)) - i_0) / i_0 * exponential_term))
+        analytical_soln = ((1 - (1 / R0)) / (1 + ((1 - (1 / R0)) - i0) / i0 * exponential_term))
         
         i += i_t * dt
         analytical_i = analytical_soln * dt + analytical[-1]

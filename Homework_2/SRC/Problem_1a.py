@@ -9,10 +9,10 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-def forward_euler_solver(beta, gamma, s_0, i_0, delta_t, t_final):
+def forward_euler_solver(beta, gamma, s0, i0, del_t, t_fin):
     t = 0
-    s = s_0
-    i = i_0
+    s = s0
+    i = i0
     R_0 = beta / gamma
     # analytical_i = 0
      
@@ -21,16 +21,16 @@ def forward_euler_solver(beta, gamma, s_0, i_0, delta_t, t_final):
     time = [t]
     analytical = [i]
     
-    while t < t_final:
+    while t < t_fin:
         i_t = (beta - gamma) * i * (1 - (i / (1 - (1 / R_0))))
         
         exponential_term = np.exp(-(beta - gamma) * t)
-        analytical_soln = ((1 - (1 / R_0)) / (1 + ((1 - (1 / R_0)) - i_0) / i_0 * exponential_term))
+        analytical_soln = ((1 - (1 / R_0)) / (1 + ((1 - (1 / R_0)) - i0) / i0 * exponential_term))
         
-        i += (i_t * delta_t)
-        analytical_i = (analytical_soln * delta_t) + analytical[-1]
+        i += (i_t * del_t)
+        analytical_i = (analytical_soln * del_t) + analytical[-1]
         
-        t += delta_t
+        t += del_t
         time.append(t)
         
         infected.append(i)
@@ -51,12 +51,12 @@ def plots(dt, label):
     results = forward_euler_solver(beta, gamma, s0, i0, dt, max_t)
     susceptibles, infected, solver_time, analytical = results
     
-    plt.plot(time, infected[:len(time)], 'r-', label='forward euler')
-    plt.plot(solver_time, analytical, 'k--', label='Analytical')
+    plt.plot(time, infected[:len(time)], 'r-', label='forward euler Sahana')
+    plt.plot(solver_time, analytical, 'k--', label='Analytical Sahana')
     
     plt.xlabel('Time(t)')
     plt.ylabel('I(t)')
-    plt.title('SIS Model')
+    plt.title('SIS Model Sahana')
     plt.legend()
     plt.ylim([0, 0.5])
     plt.show()
