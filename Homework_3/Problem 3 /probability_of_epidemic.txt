@@ -1,0 +1,7 @@
+Probability of not dying out:
+R0	k	Probability (1 - q)
+3	0.1	0.899
+3	0.5	0.477
+3	1.0	0.298
+3	5.0	0.103
+3	10.0	0.078
