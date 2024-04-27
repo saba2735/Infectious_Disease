@@ -14,15 +14,20 @@ def sp(c, negative_values):
     specificity = true_negatives / (true_negatives + false_positives) if (true_negatives + false_positives) != 0 else None
     return specificity
 
-def prevalence(phi_hat, sensitivity, specificity):
-    if sensitivity is None or specificity is None:
-        return None
-    denominator = sensitivity + specificity - 1
-    if denominator == 0: 
-        return None
+def calculate_phi_hat(c, field_data):
+    npos = sum(1 for value in field_data if value > c)
+    n = len(field_data)
+    phi = npos / n
+    return phi
 
-    return (phi_hat - (1 - specificity)) / denominator
-    
+def calculate_prevalence(phi_hat, sensitivity, specificity):
+    denominator = sensitivity + specificity - 1
+    if denominator != 0:
+        prevalence = (phi_hat * sensitivity - (1 - specificity)) / denominator
+        prevalence = max(0.8, min(prevalence, 1))
+    else:
+        prevalence = 0.8
+    return prevalence
 
 def get_youden_j_c(sensitivity, specificity):
     if sensitivity is None or specificity is None:
@@ -47,14 +52,18 @@ if __name__ == '__main__':
     positive_values, negative_values, field_values = read_csvs([pos_data_file, neg_data_file, field_data_file])
 
     # Define cutoff range to loop over
-    phi_hat = len(positive_values)/(len(positive_values)+len(negative_values))
-    cutoff_values = np.arange(1.1, 21.1,0.01)  # Example: from 1 to 20
+    cutoff_values = np.arange(1.1, 21.1, 0.01)  # Example: from 1 to 20
 
     best_cutoff = None
     best_youden_index = -float('inf')
+    best_prevalence = None
+    best_phi_value = None
+    best_sensitivity = None
+    best_specificity = None
     sensitivity_values = []
     specificity_values = []
     prevalence_values = []
+
     # Loop through each cutoff value
     for cutoff_value in cutoff_values:
         # Calculate sensitivity and specificity for the current cutoff
@@ -63,28 +72,24 @@ if __name__ == '__main__':
         sensitivity_values.append(sensitivity)
         specificity_values.append(specificity)
 
+        # Calculate Phi hat using field data
+        phi_hat_value = calculate_phi_hat(cutoff_value, field_values)
+
         # Calculate Prevalence
-        if sensitivity is not None and specificity is not None:  
-            current_prevalence = prevalence(phi_hat,sensitivity,specificity)
-            prevalence_values.append(current_prevalence)
-        else: 
-            prevalence_values.append(None)
-        
+        current_prevalence = calculate_prevalence(phi_hat_value, sensitivity, specificity)
+        prevalence_values.append(current_prevalence)
+
         # Calculate Youden index for the current cutoff
         youden_index = get_youden_j_c(sensitivity, specificity)
 
-        if current_prevalence is not None: 
-            print(f"Cutoff: {cutoff_value:.2f}, Sensitivity: {sensitivity:.4f}, Specificity: {specificity:.4f}, Youden Index: {youden_index:.4f}, Prevalence: {current_prevalence:.4f}")
-        else: 
-            print(f"Cutoff: {cutoff_value:.2f}, Sensitivity: {sensitivity:.4f}, Specificity: {specificity:.4f}, Youden Index: {youden_index:.4f}, Prevalence: None")
-
-        # Update the best cutoff based on the Youden index
         if youden_index is not None and youden_index > best_youden_index:
             best_cutoff = cutoff_value
             best_youden_index = youden_index
             best_prevalence = current_prevalence
+            best_phi_value = phi_hat_value
             best_sensitivity = sensitivity
             best_specificity = specificity
+
     # Print the best cutoff value
     print(f"Best Cutoff Value: {best_cutoff:.2f}")
     print(f"Sensitivity at Best Cutoff: {best_sensitivity:.4f}")
@@ -92,18 +97,24 @@ if __name__ == '__main__':
     print(f"Youden Index at Best Cutoff: {best_youden_index:.4f}")
     print(f"Prevalence at Best Cutoff: {best_prevalence:.4f}")
 
+    # Print the best phi value and prevalence value for the best cutoff value
+    print(f"Best Phi Value at Best Cutoff: {best_phi_value:.4f}")
+    print(f"Prevalence Value at Best Cutoff: {best_prevalence:.4f}")
+
     # Plot the ROC curve
-    plt.plot((1-np.array(specificity_values)),np.array(sensitivity_values))
-    plt.scatter(0.04,0.9600,25)  # Assuming this scatter point is for emphasis
+    plt.plot((1 - np.array(specificity_values)), np.array(sensitivity_values))
+    plt.scatter(1 - best_specificity, best_sensitivity, color='red', label='Youden Point')
     plt.title("Receiver Operating Characteristic (ROC) Curve")
     plt.xlabel("(1-specificity)")
     plt.ylabel("Sensitivity")
+    plt.legend()
     plt.show()
 
     # Plot Prevalence vs. Cutoff
-    plt.plot(cutoff_values, np.array(prevalence_values))
-    plt.scatter(0.04, 0.9600, 25)  # Assuming this scatter point is for emphasis
+    plt.plot(cutoff_values, prevalence_values)
+    plt.scatter(best_cutoff, best_prevalence, color='red', label='Youden Point')
     plt.xlabel("Cutoff")
     plt.ylabel("Prevalence")
     plt.title("Prevalence vs. Cutoff")
+    plt.legend()
     plt.show()
